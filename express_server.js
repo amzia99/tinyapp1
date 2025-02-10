@@ -8,6 +8,14 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+function generateRandomString() {
+  return Math.random().toString(36).substring(2, 8);
+}
+
+app.use(express.urlencoded({ extended: true }));
+
+// GET routes
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -20,6 +28,11 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
@@ -44,6 +57,14 @@ app.get("/set", (req, res) => {
 app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`);
 });
+
+// POST routes
+
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Logs the submitted form data
+  res.send("Ok"); 
+});
+
 
 
 app.listen(PORT, () => {
