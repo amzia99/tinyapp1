@@ -18,7 +18,11 @@ function generateRandomString() {
 }
 
 // Middleware
-app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  res.locals.cookies = req.cookies;
+  next();
+});
+
 
 // Set EJS as the view engine
 app.set("view engine", "ejs");
