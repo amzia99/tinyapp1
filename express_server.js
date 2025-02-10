@@ -12,6 +12,8 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+app.set("view engine", "ejs");
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
