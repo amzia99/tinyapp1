@@ -50,22 +50,38 @@ app.get("/", (req, res) => {
 
 // URLs index page
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    username: req.cookies["username"],
+    urls: urlDatabase,
+  };
   res.render("urls_index", templateVars);
 });
 
+
 // Create URL page
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render("urls_new", templateVars);
 });
 
+
 // Show specific URL page
-app.get("/urls/:id", validateShortURL, (req, res) => {
+app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
-  const templateVars = { id, longURL };
+  if (!longURL) {
+    return res.status(404).send("Short URL not found.");
+  }
+  const templateVars = {
+    username: req.cookies["username"],
+    id,
+    longURL,
+  };
   res.render("urls_show", templateVars);
 });
+
 
 // Redirect short URL to long URL
 app.get("/u/:id", validateShortURL, (req, res) => {
