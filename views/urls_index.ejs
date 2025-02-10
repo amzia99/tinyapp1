@@ -22,7 +22,7 @@
         <tbody>
           <% if (Object.keys(urls).length === 0) { %>
             <tr>
-              <td colspan="3" class="text-center">No URLs available. Create one!</td>
+              <td colspan="4" class="text-center">No URLs available. Create one!</td>
             </tr>
           <% } else { %>
             <% for (const id in urls) { %>
@@ -33,12 +33,13 @@
                   <a href="/urls/<%= id %>" class="btn btn-primary">Edit</a>
                 </td>
                 <td>
-                  <form method="POST" action="/urls/<%= id %>/delete">
+                  <form method="POST" action="/urls/<%= id %>/delete" style="margin: 0;">
                     <button type="submit" class="btn btn-danger">Delete</button>
                   </form>
                 </td>
               </tr>
             <% } %>
+          <% } %>
         </tbody>
       </table>
       <a href="/urls/new" class="btn btn-primary">Create New URL</a>
