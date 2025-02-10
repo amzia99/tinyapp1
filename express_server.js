@@ -1,10 +1,13 @@
 // express server code
 const express = require("express");
 const app = express();
-const PORT = 8080; 
+const PORT = 8080;
 
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
+
+// Middleware to parse request body
+app.use(express.urlencoded({ extended: true }));
 
 // URL database
 const urlDatabase = {
@@ -17,12 +20,11 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
 
-// Middleware
+// Middleware to pass cookies to all templates
 app.use((req, res, next) => {
   res.locals.cookies = req.cookies;
   next();
 });
-
 
 // Set EJS as the view engine
 app.set("view engine", "ejs");
@@ -41,19 +43,23 @@ function validateShortURL(req, res, next) {
 
 // GET Routes
 
+// Root route
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+// URLs index page
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+// Create URL page
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// Show specific URL page
 app.get("/urls/:id", validateShortURL, (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
@@ -61,6 +67,7 @@ app.get("/urls/:id", validateShortURL, (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Redirect short URL to long URL
 app.get("/u/:id", validateShortURL, (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
@@ -68,10 +75,12 @@ app.get("/u/:id", validateShortURL, (req, res) => {
   res.redirect(longURL);
 });
 
+// JSON representation of URLs
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// Hello page
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
@@ -112,9 +121,13 @@ app.post("/urls/:id/delete", validateShortURL, (req, res) => {
 
 // Login
 app.post("/login", (req, res) => {
-  const username = req.body.username; 
-  res.cookie("username", username); 
-  res.redirect("/urls"); 
+  const username = req.body.username;
+  if (!username) {
+    return res.status(400).send("Username is required.");
+  }
+  res.cookie("username", username);
+  console.log(`Logged in as: ${username}`);
+  res.redirect("/urls");
 });
 
 // Start server
