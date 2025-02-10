@@ -14,6 +14,8 @@ app.get("/", (req, res) => {
 
 app.set("view engine", "ejs");
 
+console.log("Views Path:", app.get("views"));
+
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
