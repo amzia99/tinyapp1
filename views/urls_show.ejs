@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" />
+    <title>URL - TinyApp Example</title>
+  </head>
+  <body>
+    <% include('partials/_header') %>
+    <div class="card text-center">
+      <div class="card-header">URL Details</div>
+      <div class="card-body">
+        <h5 class="card-title">TinyURL for: <%= longURL %></h5>
+        <p class="card-text">
+          Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
+        </p>
+        <a href="#" class="btn btn-primary">Create New URL</a>
+      </div>
+    </div>
+  </body>
+</html>
