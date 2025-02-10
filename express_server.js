@@ -1,7 +1,7 @@
 // express server code
 const express = require("express");
 const app = express();
-const PORT = 8080; // Default port
+const PORT = 8080; 
 
 // URL database
 const urlDatabase = {
@@ -23,6 +23,15 @@ app.set("view engine", "ejs");
 // Log views path
 console.log("Views Path:", app.get("views"));
 
+// Middleware if a short URL exists in the database
+function validateShortURL(req, res, next) {
+  const id = req.params.id;
+  if (!urlDatabase[id]) {
+    return res.status(404).send("Short URL not found.");
+  }
+  next();
+}
+
 // GET Routes
 
 app.get("/", (req, res) => {
@@ -38,27 +47,19 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-app.get("/urls/:id", (req, res) => {
+app.get("/urls/:id", validateShortURL, (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
-  if (!longURL) {
-    return res.status(404).send("Short URL not found.");
-  }
   const templateVars = { id, longURL };
   res.render("urls_show", templateVars);
 });
 
-app.get("/u/:id", (req, res) => {
+app.get("/u/:id", validateShortURL, (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
-  if (!longURL) {
-    return res.status(404).send("Short URL not found.");
-  }
   console.log(`Redirecting to: ${longURL}`);
   res.redirect(longURL);
 });
-
-
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -70,6 +71,7 @@ app.get("/hello", (req, res) => {
 
 // POST Routes
 
+// Create new URL
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   if (!longURL.startsWith("http://") && !longURL.startsWith("https://")) {
@@ -81,29 +83,27 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-// Updating URLS
-app.post("/urls/:id", (req, res) => {
+// Update existing URL
+app.post("/urls/:id", validateShortURL, (req, res) => {
   const id = req.params.id;
   const newLongURL = req.body.longURL;
-
-  if (urlDatabase[id]) {
-    urlDatabase[id] = newLongURL; 
+  if (!newLongURL.startsWith("http://") && !newLongURL.startsWith("https://")) {
+    return res.status(400).send("Invalid URL. Please include http:// or https://");
   }
-
-  res.redirect("/urls"); 
+  console.log(`Updating Short URL ${id} with new URL: ${newLongURL}`);
+  urlDatabase[id] = newLongURL;
+  res.redirect("/urls");
 });
 
-
-// Delete requests
-app.post("/urls/:id/delete", (req, res) => {
+// Delete URL
+app.post("/urls/:id/delete", validateShortURL, (req, res) => {
   const id = req.params.id;
-  if (urlDatabase[id]) {
-    delete urlDatabase[id]; 
-  }
-  res.redirect("/urls"); 
+  console.log(`Deleting Short URL ${id}`);
+  delete urlDatabase[id];
+  res.redirect("/urls");
 });
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
