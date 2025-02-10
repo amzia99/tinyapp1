@@ -1,14 +1,18 @@
 <header class="navbar navbar-expand-lg navbar-light bg-success">
   <a class="navbar-brand text-white" href="/urls">TinyApp</a>
   <div class="ml-auto">
-    <form method="POST" action="/login" class="form-inline">
-      <input
-        type="text"
-        name="username"
-        placeholder="Username"
-        class="form-control mr-2"
-      />
-      <button type="submit" class="btn btn-primary">Login</button>
-    </form>
+    <% if (cookies.username) { %>
+      <span class="text-white mr-3">Welcome, <%= cookies.username %>!</span>
+    <% } else { %>
+      <form method="POST" action="/login" class="form-inline">
+        <input
+          type="text"
+          name="username"
+          placeholder="Username"
+          class="form-control mr-2"
+        />
+        <button type="submit" class="btn btn-primary">Login</button>
+      </form>
+    <% } %>
   </div>
 </header>
