@@ -48,6 +48,18 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/u/:id", (req, res) => {
+  const id = req.params.id;
+  const longURL = urlDatabase[id];
+  if (!longURL) {
+    return res.status(404).send("Short URL not found.");
+  }
+  console.log(`Redirecting to: ${longURL}`);
+  res.redirect(longURL);
+});
+
+
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
@@ -59,11 +71,14 @@ app.get("/hello", (req, res) => {
 // POST Routes
 
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL; // store in database
-  console.log("Updated urlDatabase:", urlDatabase); // for debugging
-  res.redirect(`/urls/${shortURL}`); // redirect to /urls/:id
+  if (!longURL.startsWith("http://") && !longURL.startsWith("https://")) {
+    return res.status(400).send("Invalid URL. Please include http:// or https://");
+  }
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = longURL;
+  console.log("Updated urlDatabase:", urlDatabase);
+  res.redirect(`/urls/${shortURL}`);
 });
 
 
