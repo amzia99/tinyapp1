@@ -3,6 +3,9 @@ const express = require("express");
 const app = express();
 const PORT = 8080; 
 
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
 // URL database
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -101,6 +104,13 @@ app.post("/urls/:id/delete", validateShortURL, (req, res) => {
   console.log(`Deleting Short URL ${id}`);
   delete urlDatabase[id];
   res.redirect("/urls");
+});
+
+// Login
+app.post("/login", (req, res) => {
+  const username = req.body.username; 
+  res.cookie("username", username); 
+  res.redirect("/urls"); 
 });
 
 // Start server
