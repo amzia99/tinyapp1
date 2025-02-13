@@ -140,15 +140,15 @@ app.get("/urls/:id", (req, res) => {
 
 // Redirect short URL to long URL
 app.get("/u/:id", (req, res) => {
-  const id = req.params.id;
-  const urlEntry = urlDatabase[id];
+  const urlEntry = urlDatabase[req.params.id];
 
   if (!urlEntry) {
-    return res.status(404).send("<h2>Short URL not found.</h2>");
+    return res.status(404).send("Short URL not found.");
   }
 
   res.redirect(urlEntry.longURL);
 });
+
 
 // JSON representation of URLs
 app.get("/urls.json", (req, res) => {
@@ -196,24 +196,48 @@ app.post("/urls", (req, res) => {
 });
 
 // Update existing URL
-app.post("/urls/:id", validateShortURL, (req, res) => {
-  const id = req.params.id;
-  const newLongURL = req.body.longURL;
-  if (!newLongURL.startsWith("http://") && !newLongURL.startsWith("https://")) {
-    return res.status(400).send("Invalid URL. Please include http:// or https://");
+app.post("/urls/:id", (req, res) => {
+  const userID = req.cookies["user_id"];
+  const urlEntry = urlDatabase[req.params.id];
+
+  if (!userID) {
+    return res.status(403).send("You must be logged in to edit URLs.");
   }
-  console.log(`Updating Short URL ${id} with new URL: ${newLongURL}`);
-  urlDatabase[id] = newLongURL;
+
+  if (!urlEntry) {
+    return res.status(404).send("Short URL not found.");
+  }
+
+  if (urlEntry.userID !== userID) {
+    return res.status(403).send("You do not own this URL.");
+  }
+
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
+
 // Delete URL
-app.post("/urls/:id/delete", validateShortURL, (req, res) => {
-  const id = req.params.id;
-  console.log(`Deleting Short URL ${id}`);
-  delete urlDatabase[id];
+app.post("/urls/:id/delete", (req, res) => {
+  const userID = req.cookies["user_id"];
+  const urlEntry = urlDatabase[req.params.id];
+
+  if (!userID) {
+    return res.status(403).send("You must be logged in to delete URLs.");
+  }
+
+  if (!urlEntry) {
+    return res.status(404).send("Short URL not found.");
+  }
+
+  if (urlEntry.userID !== userID) {
+    return res.status(403).send("You do not own this URL.");
+  }
+
+  delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
+
 
 // Helper function to find a user by email
 const getUserByEmail = (email, users) => {
