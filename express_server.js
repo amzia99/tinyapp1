@@ -77,15 +77,13 @@ app.get("/urls", (req, res) => {
 });
 
 
-// Create URL page
+// Create URL page for logged in user
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies["user_id"];
-  const user = users[userId]; 
-
-  const templateVars = {
-    user,
-  };
-  res.render("urls_new", templateVars);
+  if (!users[userId]) {
+    return res.redirect("/login");
+  }
+  res.render("urls_new", { user: users[userId] });
 });
 
 
@@ -111,11 +109,15 @@ app.get("/urls/:id", (req, res) => {
 
 
 // Redirect short URL to long URL
-app.get("/u/:id", validateShortURL, (req, res) => {
+app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id];
-  console.log(`Redirecting to: ${longURL}`);
-  res.redirect(longURL);
+  const urlEntry = urlDatabase[id];
+
+  if (!urlEntry) {
+    return res.status(404).send("<h2>Short URL not found.</h2>");
+  }
+
+  res.redirect(urlEntry.longURL);
 });
 
 // JSON representation of URLs
@@ -131,24 +133,19 @@ app.get("/hello", (req, res) => {
 // Show the registration form
 app.get("/register", (req, res) => {
   const userId = req.cookies["user_id"];
-  const user = users[userId];
-
-  const templateVars = {
-    user, 
-  };
-  res.render("register", templateVars);
+  if (users[userId]) {
+    return res.redirect("/urls");
+  }
+  res.render("register");
 });
 
 // Show the login form
 app.get("/login", (req, res) => {
   const userId = req.cookies["user_id"];
-  const user = users[userId];
-
-  const templateVars = {
-    user,
-  };
-
-  res.render("login", templateVars);
+  if (users[userId]) {
+    return res.redirect("/urls");
+  }
+  res.render("login");
 });
 
 
@@ -156,15 +153,15 @@ app.get("/login", (req, res) => {
 
 // POST Routes
 
-// Create new URL
+// Create new URL for logged in users
 app.post("/urls", (req, res) => {
-  const longURL = req.body.longURL;
-  if (!longURL.startsWith("http://") && !longURL.startsWith("https://")) {
-    return res.status(400).send("Invalid URL. Please include http:// or https://");
+  const userId = req.cookies["user_id"];
+  if (!users[userId]) {
+    return res.status(403).send("You must be logged in to create a short URL.");
   }
+
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
-  console.log("Updated urlDatabase:", urlDatabase);
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userId };
   res.redirect(`/urls/${shortURL}`);
 });
 
