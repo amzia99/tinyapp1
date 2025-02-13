@@ -129,11 +129,15 @@ app.get("/hello", (req, res) => {
 
 // Show the registration form
 app.get("/register", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
+
   const templateVars = {
-    username: req.cookies["username"],
+    user, 
   };
   res.render("register", templateVars);
 });
+
 
 
 // POST Routes
@@ -170,14 +174,34 @@ app.post("/urls/:id/delete", validateShortURL, (req, res) => {
   res.redirect("/urls");
 });
 
+// Helper function to find user by email
+const getUserByEmail = (email, users) => {
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      return users[userId]; 
+    }
+  }
+  return null; 
+};
+
 // Login
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  if (!username) {
-    return res.status(400).send("Username is required.");
+  const { email, password } = req.body;
+  const user = getUserByEmail(email, users);
+
+  // check if user exists
+  if (!user) {
+    return res.status(403).send("Error: Email not found.");
   }
-  res.cookie("username", username);
-  console.log(`Logged in as: ${username}`);
+
+  // check if password matches
+  if (user.password !== password) {
+    return res.status(403).send("Error: Incorrect password.");
+  }
+
+  // set user_id cookie for login
+  res.cookie("user_id", user.id);
+  console.log(`Logged in as: ${user.email}`);
   res.redirect("/urls");
 });
 
