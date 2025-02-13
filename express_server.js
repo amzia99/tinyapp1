@@ -116,23 +116,26 @@ app.get("/urls/new", (req, res) => {
 
 // Show specific URL page
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
-  const user = users[userId]; 
+  const userID = req.cookies["user_id"];
+  const user = users[userID];
+  const urlEntry = urlDatabase[req.params.id];
 
-  const id = req.params.id;
-  const longURL = urlDatabase[id];
+  if (!user) {
+    return res.status(403).send("You must be logged in to view this page.");
+  }
 
-  if (!longURL) {
+  if (!urlEntry) {
     return res.status(404).send("Short URL not found.");
   }
 
-  const templateVars = {
-    user,
-    id,
-    longURL,
-  };
+  if (urlEntry.userID !== userID) {
+    return res.status(403).send("You do not own this URL.");
+  }
+
+  const templateVars = { user, id: req.params.id, longURL: urlEntry.longURL };
   res.render("urls_show", templateVars);
 });
+
 
 
 // Redirect short URL to long URL
