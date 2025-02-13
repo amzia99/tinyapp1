@@ -65,8 +65,11 @@ app.get("/", (req, res) => {
 
 // URLs index page
 app.get("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
+
   const templateVars = {
-    username: req.cookies["username"],
+    user,
     urls: urlDatabase,
   };
   res.render("urls_index", templateVars);
@@ -75,8 +78,11 @@ app.get("/urls", (req, res) => {
 
 // Create URL page
 app.get("/urls/new", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId]; 
+
   const templateVars = {
-    username: req.cookies["username"],
+    user,
   };
   res.render("urls_new", templateVars);
 });
@@ -84,13 +90,18 @@ app.get("/urls/new", (req, res) => {
 
 // Show specific URL page
 app.get("/urls/:id", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId]; 
+
   const id = req.params.id;
   const longURL = urlDatabase[id];
+
   if (!longURL) {
     return res.status(404).send("Short URL not found.");
   }
+
   const templateVars = {
-    username: req.cookies["username"],
+    user,
     id,
     longURL,
   };
