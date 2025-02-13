@@ -28,7 +28,7 @@
             <% for (const id in urls) { %>
               <tr>
                 <td><a href="/u/<%= id %>"><%= id %></a></td>
-                <td><%= urls[id] %></td>
+                <td><%= urls[id].longURL %></td> 
                 <td>
                   <a href="/urls/<%= id %>" class="btn btn-primary">Edit</a>
                 </td>

@@ -1,12 +1,22 @@
 // express server code
 const bcrypt = require("bcryptjs");
-
 const express = require("express");
+const cookieSession = require("cookie-session");
+
+// import helper function
+const { getUserByEmail } = require("./helpers");
+
 const app = express();
 const PORT = 8080;
 
-const cookieParser = require("cookie-parser");
-app.use(cookieParser());
+
+// cookie session middleware
+app.use(cookieSession({
+  name: 'session',
+  keys: ['secretKey1', 'secretKey2'], 
+  maxAge: 24 * 60 * 60 * 1000 // 24 hour expiry
+}));
+
 
 // Middleware to parse request body
 app.use(express.urlencoded({ extended: true }));
@@ -16,12 +26,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10), 
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("dishwasher-funk", 10),
   },
 };
 
@@ -58,10 +68,11 @@ function generateRandomString() {
 
 // Middleware to pass user object to all templates
 app.use((req, res, next) => {
-  const userId = req.cookies["user_id"];
-  res.locals.user = users[userId] || null; 
+  const userId = req.session.user_id; 
+  res.locals.user = users[userId] || null;
   next();
 });
+
 
 // Set EJS as the view engine
 app.set("view engine", "ejs");
@@ -87,7 +98,7 @@ app.get("/", (req, res) => {
 
 // URLs index page
 app.get("/urls", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
 
   if (!user) {
@@ -95,6 +106,11 @@ app.get("/urls", (req, res) => {
   }
 
   const userURLs = urlsForUser(userID);
+
+  // debugging for long URLS
+  console.log("User URLs Data:", userURLs);
+
+
   const templateVars = { user, urls: userURLs };
   res.render("urls_index", templateVars);
 });
@@ -103,7 +119,7 @@ app.get("/urls", (req, res) => {
 
 // Create URL page for logged in user
 app.get("/urls/new", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
 
   if (!user) {
@@ -118,7 +134,7 @@ app.get("/urls/new", (req, res) => {
 
 // Show specific URL page
 app.get("/urls/:id", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const user = users[userID];
   const urlEntry = urlDatabase[req.params.id];
 
@@ -164,7 +180,7 @@ app.get("/hello", (req, res) => {
 
 // Show the registration form
 app.get("/register", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (users[userId]) {
     return res.redirect("/urls");
   }
@@ -173,7 +189,7 @@ app.get("/register", (req, res) => {
 
 // Show the login form
 app.get("/login", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (users[userId]) {
     return res.redirect("/urls");
   }
@@ -181,25 +197,28 @@ app.get("/login", (req, res) => {
 });
 
 
-
-
 // POST Routes
 
 // Create new URL for logged in users
 app.post("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
-  if (!users[userId]) {
+  const userID = req.session.user_id; 
+
+  if (!users[userID]) {
     return res.status(403).send("You must be logged in to create a short URL.");
   }
 
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userId };
+  urlDatabase[shortURL] = { longURL: String(req.body.longURL), userID: userID };
+
+  // debugging for long URL
+  console.log("Updated URL Database:", urlDatabase);
+
   res.redirect(`/urls/${shortURL}`);
 });
 
 // Update existing URL
 app.post("/urls/:id", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const urlEntry = urlDatabase[req.params.id];
 
   if (!userID) {
@@ -221,7 +240,7 @@ app.post("/urls/:id", (req, res) => {
 
 // Delete URL
 app.post("/urls/:id/delete", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const urlEntry = urlDatabase[req.params.id];
 
   if (!userID) {
@@ -241,41 +260,24 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 
-// Helper function to find a user by email
-const getUserByEmail = (email, users) => {
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      return users[userId];
-    }
-  }
-  return null;
-};
-
 // Login
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
+  const user = getUserByEmail(email, users);
 
-  for (const userId in users) {
-    const user = users[userId];
-
-    if (user.email === email) {
-      // Compare hashed password
-      if (bcrypt.compareSync(password, user.password)) {
-        res.cookie("user_id", user.id);
-        return res.redirect("/urls");
-      } else {
-        return res.status(403).send("Incorrect password.");
-      }
-    }
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    return res.status(403).send("Invalid email or password.");
   }
 
-  res.status(403).send("Email not found.");
+  req.session.user_id = user.id; 
+  res.redirect("/urls"); 
 });
+
 
 
 // Logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null; 
   res.redirect("/login");
 });
 
@@ -288,28 +290,17 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Email and password are required.");
   }
 
-  // to check if email exists
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      return res.status(400).send("Email already exists. Please login.");
-    }
+  if (getUserByEmail(email, users)) {
+    return res.status(400).send("Email already exists. Please log in.");
   }
 
-  // hashing password before storage
-  const hashedPassword = bcrypt.hashSync(password, 10); 
-
-  // create new user with hashed password
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const userId = generateRandomString();
-  users[userId] = { id: userId, email, password: hashedPassword }; 
+  users[userId] = { id: userId, email, password: hashedPassword };
 
-  console.log("Updated users database:", users);
-
-  // user id_cookie and redirect 
-  res.cookie("user_id", userId);
+  req.session.user_id = userId; 
   res.redirect("/urls");
 });
-
-
 
 
 // Start server
