@@ -207,9 +207,10 @@ app.post("/login", (req, res) => {
 
 // Logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id"); 
   res.redirect("/urls");
 });
+
 
 // Form submissions
 app.post("/register", (req, res) => {
