@@ -139,6 +139,19 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
+// Show the login form
+app.get("/login", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
+
+  const templateVars = {
+    user,
+  };
+
+  res.render("login", templateVars);
+});
+
+
 
 
 // POST Routes
