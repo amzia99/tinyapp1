@@ -101,12 +101,17 @@ app.get("/urls", (req, res) => {
 
 // Create URL page for logged in user
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies["user_id"];
-  if (!users[userId]) {
-    return res.redirect("/login");
+  const userID = req.cookies["user_id"];
+  const user = users[userID];
+
+  if (!user) {
+    return res.redirect("/login"); // now redirect to login page
   }
-  res.render("urls_new", { user: users[userId] });
+
+  const templateVars = { user };
+  res.render("urls_new", templateVars);
 });
+
 
 
 // Show specific URL page
