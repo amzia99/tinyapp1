@@ -85,15 +85,18 @@ app.get("/", (req, res) => {
 
 // URLs index page
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
-  const user = users[userId];
+  const userID = req.cookies["user_id"];
+  const user = users[userID];
 
-  const templateVars = {
-    user,
-    urls: urlDatabase,
-  };
+  if (!user) {
+    return res.status(403).send("Please log in or register to view URLs.");
+  }
+
+  const userURLs = urlsForUser(userID);
+  const templateVars = { user, urls: userURLs };
   res.render("urls_index", templateVars);
 });
+
 
 
 // Create URL page for logged in user
