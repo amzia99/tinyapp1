@@ -188,14 +188,14 @@ app.post("/urls/:id/delete", validateShortURL, (req, res) => {
   res.redirect("/urls");
 });
 
-// Helper function to find user by email
+// Helper function to find a user by email
 const getUserByEmail = (email, users) => {
   for (const userId in users) {
     if (users[userId].email === email) {
-      return users[userId]; 
+      return users[userId];
     }
   }
-  return null; 
+  return null;
 };
 
 // Login
@@ -205,17 +205,15 @@ app.post("/login", (req, res) => {
 
   // check if user exists
   if (!user) {
-    return res.status(403).send("Error: Email not found.");
+    return res.status(403).send("User not found.");
   }
 
   // check if password matches
   if (user.password !== password) {
-    return res.status(403).send("Error: Incorrect password.");
+    return res.status(403).send("Incorrect password.");
   }
 
-  // set user_id cookie for login
   res.cookie("user_id", user.id);
-  console.log(`Logged in as: ${user.email}`);
   res.redirect("/urls");
 });
 
