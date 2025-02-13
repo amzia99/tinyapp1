@@ -213,39 +213,37 @@ app.post("/logout", (req, res) => {
 });
 
 
-// Form submissions
+// Register new user
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
 
-  // if email or password is empty
+  // check for empty fields
   if (!email || !password) {
-    return res.status(400).send("Email and password are required.");
+    return res.status(400).send("Error: Email and password are required.");
   }
 
-  // if email is registered
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      return res.status(400).send("Email already exists. Please login.");
-    }
+  // check if email is registerd
+  if (getUserByEmail(email, users)) {
+    return res.status(400).send("Error: Email already exists. Please login.");
   }
 
-  // unique user id
+  // generate a unique user ID
   const userId = generateRandomString();
 
-  // adding new user to database
+  // add new user to users database
   users[userId] = {
     id: userId,
     email,
-    password, 
+    password,
   };
 
   console.log("Updated users database:", users);
 
-  // user id coolie
+  
   res.cookie("user_id", userId);
-
   res.redirect("/urls");
 });
+
 
 
 // Start server
