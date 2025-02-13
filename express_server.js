@@ -35,9 +35,10 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
 
-// Middleware to pass cookies to all templates
+// Middleware to pass user object to all templates
 app.use((req, res, next) => {
-  res.locals.cookies = req.cookies;
+  const userId = req.cookies["user_id"];
+  res.locals.user = users[userId] || null; 
   next();
 });
 
