@@ -1,4 +1,6 @@
 // express server code
+const bcrypt = require("bcryptjs");
+
 const express = require("express");
 const app = express();
 const PORT = 8080;
@@ -252,21 +254,24 @@ const getUserByEmail = (email, users) => {
 // Login
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
-  const user = getUserByEmail(email, users);
 
-  // check if user exists
-  if (!user) {
-    return res.status(403).send("User not found.");
+  for (const userId in users) {
+    const user = users[userId];
+
+    if (user.email === email) {
+      // Compare hashed password
+      if (bcrypt.compareSync(password, user.password)) {
+        res.cookie("user_id", user.id);
+        return res.redirect("/urls");
+      } else {
+        return res.status(403).send("Incorrect password.");
+      }
+    }
   }
 
-  // check if password matches
-  if (user.password !== password) {
-    return res.status(403).send("Incorrect password.");
-  }
-
-  res.cookie("user_id", user.id);
-  res.redirect("/urls");
+  res.status(403).send("Email not found.");
 });
+
 
 // Logout
 app.post("/logout", (req, res) => {
@@ -279,32 +284,31 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
 
-  // check for empty fields
   if (!email || !password) {
-    return res.status(400).send("Error: Email and password are required.");
+    return res.status(400).send("Email and password are required.");
   }
 
-  // check if email is registerd
-  if (getUserByEmail(email, users)) {
-    return res.status(400).send("Error: Email already exists. Please login.");
+  // to check if email exists
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      return res.status(400).send("Email already exists. Please login.");
+    }
   }
 
-  // generate a unique user ID
+  // hashing password before storage
+  const hashedPassword = bcrypt.hashSync(password, 10); 
+
+  // create new user with hashed password
   const userId = generateRandomString();
-
-  // add new user to users database
-  users[userId] = {
-    id: userId,
-    email,
-    password,
-  };
+  users[userId] = { id: userId, email, password: hashedPassword }; 
 
   console.log("Updated users database:", users);
 
-  
+  // user id_cookie and redirect 
   res.cookie("user_id", userId);
   res.redirect("/urls");
 });
+
 
 
 
