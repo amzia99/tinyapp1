@@ -1,9 +1,11 @@
-<header class="navbar navbar-expand-lg navbar-light bg-success">
+<header class="navbar navbar-expand-lg navbar-light bg-success px-3">
   <a class="navbar-brand text-white" href="/urls">TinyApp</a>
-  <div class="navbar-nav">
+
+  <nav class="navbar-nav">
     <a class="nav-item nav-link text-white" href="/urls">My URLs</a>
     <a class="nav-item nav-link text-white" href="/urls/new">Create New URL</a>
-  </div>
+  </nav>
+
   <div class="ml-auto">
     <% if (user) { %>
       <span class="text-white mr-3">Logged in as: <%= user.email %>!</span>
@@ -11,15 +13,8 @@
         <button type="submit" class="btn btn-outline-light">Logout</button>
       </form>
     <% } else { %>
-      <form method="POST" action="/login" class="form-inline">
-        <input
-          type="text"
-          name="email"
-          placeholder="Email"
-          class="form-control mr-2"
-        />
-        <button type="submit" class="btn btn-primary">Login</button>
-      </form>
+      <a href="/login" class="btn btn-outline-light mr-2">Login</a>
+      <a href="/register" class="btn btn-primary">Register</a>
     <% } %>
   </div>
 </header>
