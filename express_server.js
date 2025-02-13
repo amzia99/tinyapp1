@@ -36,6 +36,18 @@ const urlDatabase = {
   },
 };
 
+// return URLS created by specific user
+const urlsForUser = (id) => {
+  let filteredURLs = {};
+  for (let shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      filteredURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return filteredURLs;
+};
+
+
 
 // Function to generate short URL
 function generateRandomString() {
