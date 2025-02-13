@@ -9,14 +9,14 @@ const { getUserByEmail } = require("./helpers");
 const app = express();
 const PORT = 8080;
 
-
 // cookie session middleware
-app.use(cookieSession({
-  name: 'session',
-  keys: ['secretKey1', 'secretKey2'], 
-  maxAge: 24 * 60 * 60 * 1000 // 24 hour expiry
-}));
-
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["secretKey1", "secretKey2"],
+    maxAge: 24 * 60 * 60 * 1000, // 24 hour expiry
+  }),
+);
 
 // Middleware to parse request body
 app.use(express.urlencoded({ extended: true }));
@@ -26,7 +26,7 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: bcrypt.hashSync("purple-monkey-dinosaur", 10), 
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10),
   },
   user2RandomID: {
     id: "user2RandomID",
@@ -34,7 +34,6 @@ const users = {
     password: bcrypt.hashSync("dishwasher-funk", 10),
   },
 };
-
 
 // URL database
 const urlDatabase = {
@@ -59,8 +58,6 @@ const urlsForUser = (id) => {
   return filteredURLs;
 };
 
-
-
 // Function to generate short URL
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
@@ -68,11 +65,10 @@ function generateRandomString() {
 
 // Middleware to pass user object to all templates
 app.use((req, res, next) => {
-  const userId = req.session.user_id; 
+  const userId = req.session.user_id;
   res.locals.user = users[userId] || null;
   next();
 });
-
 
 // Set EJS as the view engine
 app.set("view engine", "ejs");
@@ -110,12 +106,9 @@ app.get("/urls", (req, res) => {
   // debugging for long URLS
   console.log("User URLs Data:", userURLs);
 
-
   const templateVars = { user, urls: userURLs };
   res.render("urls_index", templateVars);
 });
-
-
 
 // Create URL page for logged in user
 app.get("/urls/new", (req, res) => {
@@ -129,8 +122,6 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { user };
   res.render("urls_new", templateVars);
 });
-
-
 
 // Show specific URL page
 app.get("/urls/:id", (req, res) => {
@@ -154,8 +145,6 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-
-
 // Redirect short URL to long URL
 app.get("/u/:id", (req, res) => {
   const urlEntry = urlDatabase[req.params.id];
@@ -166,7 +155,6 @@ app.get("/u/:id", (req, res) => {
 
   res.redirect(urlEntry.longURL);
 });
-
 
 // JSON representation of URLs
 app.get("/urls.json", (req, res) => {
@@ -196,12 +184,11 @@ app.get("/login", (req, res) => {
   res.render("login");
 });
 
-
 // POST Routes
 
 // Create new URL for logged in users
 app.post("/urls", (req, res) => {
-  const userID = req.session.user_id; 
+  const userID = req.session.user_id;
 
   if (!users[userID]) {
     return res.status(403).send("You must be logged in to create a short URL.");
@@ -237,7 +224,6 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-
 // Delete URL
 app.post("/urls/:id/delete", (req, res) => {
   const userID = req.session.user_id;
@@ -259,7 +245,6 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-
 // Login
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
@@ -269,18 +254,15 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Invalid email or password.");
   }
 
-  req.session.user_id = user.id; 
-  res.redirect("/urls"); 
+  req.session.user_id = user.id;
+  res.redirect("/urls");
 });
-
-
 
 // Logout
 app.post("/logout", (req, res) => {
-  req.session = null; 
+  req.session = null;
   res.redirect("/login");
 });
-
 
 // Register new user
 app.post("/register", (req, res) => {
@@ -298,10 +280,9 @@ app.post("/register", (req, res) => {
   const userId = generateRandomString();
   users[userId] = { id: userId, email, password: hashedPassword };
 
-  req.session.user_id = userId; 
+  req.session.user_id = userId;
   res.redirect("/urls");
 });
-
 
 // Start server
 app.listen(PORT, () => {
